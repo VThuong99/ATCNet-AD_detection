@@ -48,11 +48,9 @@ class PsdPreprocessor(Preprocessor):
         self.freqs = None
 
     def preprocess(self, data: np.ndarray) -> np.ndarray:
-        # Step 1: Preprocess raw data
         raw_data = self.raw_preprocessor.preprocess(data)
         print(f"Running {self.name}")
 
-        # Step 2: Compute PSD for each epoch
         n_epochs, n_channels, n_times = raw_data.shape
         all_psds = []
         all_freqs: np.ndarray | None = None
@@ -63,13 +61,13 @@ class PsdPreprocessor(Preprocessor):
                 sfreq=self.sfreq,
                 fmin=self.fmin,
                 fmax=self.fmax,
+                n_fft=int(self.sfreq * 4),  # Use 4-second windows, resulting in 0.25 Hz frequency resolution
                 verbose=False
             )
             all_psds.append(psds)
             if all_freqs is None:
                 all_freqs = freqs  # Save frequencies from the first iteration
 
-        # Convert list of PSDs into a single ndarray
         processed_data = np.array(all_psds)  # Shape: (n_epochs, n_channels, n_freqs)
         self.freqs = all_freqs
         return processed_data
